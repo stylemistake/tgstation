@@ -161,6 +161,11 @@ export const options: {
   createVNode: ((vNode: VNode) => void) | null;
   renderComplete: ((rootInput: VNode | InfernoNode, parentDOM: Element | SVGAElement | ShadowRoot | DocumentFragment | HTMLElement | Node) => void) | null;
   reactStyles?: boolean;
+  // Hooks
+  beforeRender?: any,
+  beforeUpdate?: any,
+  afterUpdate?: any,
+  beforeUnmount?: any,
 } = {
   componentComparator: null,
   createVNode: null,

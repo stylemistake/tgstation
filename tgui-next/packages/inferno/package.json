@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "inferno",
   "version": "7.3.2",
   "license": "MIT",

@@ -7,6 +7,7 @@ import { mountProps } from './props';
 import { createClassComponentInstance } from './utils/componentUtil';
 import { validateKeys } from '../core/validate';
 import { mountRef } from '../core/refs';
+import { options } from './utils/common';
 
 export function mount(vNode: VNode, parentDOM: Element | null, context: Object, isSVG: boolean, nextNode: Element | null, lifecycle: Function[]): void {
   const flags = (vNode.flags |= VNodeFlags.InUse);
@@ -185,6 +186,9 @@ export function mountFunctionalComponentCallbacks(vNode: VNode, lifecycle: Funct
     safeCall1(ref.onComponentWillMount, vNode.props || EMPTY_OBJ);
     if (isFunction(ref.onComponentDidMount)) {
       lifecycle.push(createOnMountCallback(ref, vNode));
+    }
+    if (options.beforeRender) {
+      options.beforeRender(vNode);
     }
   }
 }

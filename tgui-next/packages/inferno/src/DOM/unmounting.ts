@@ -4,6 +4,7 @@ import { VNode } from '../core/types';
 import { syntheticEvents, unmountSyntheticEvent } from './events/delegation';
 import { EMPTY_OBJ, findDOMfromVNode, removeVNodeDOM } from './utils/common';
 import { unmountRef } from '../core/refs';
+import { options } from './utils/common';
 
 export function remove(vNode: VNode, parentDOM: Element) {
   unmount(vNode);
@@ -52,6 +53,9 @@ export function unmount(vNode) {
 
       if (!isNullOrUndef(ref) && isFunction(ref.onComponentWillUnmount)) {
         ref.onComponentWillUnmount(findDOMfromVNode(vNode, true) as Element, vNode.props || EMPTY_OBJ);
+      }
+      if (options.beforeUnmount) {
+        options.beforeUnmount(vNode);
       }
 
       unmount(children);

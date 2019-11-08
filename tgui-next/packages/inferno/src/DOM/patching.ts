@@ -458,6 +458,9 @@ function patchFunctionalComponent(lastVNode, nextVNode, parentDOM, context, isSV
     if (nextHooksDefined && isFunction(nextRef.onComponentWillUpdate)) {
       nextRef.onComponentWillUpdate(lastProps, nextProps);
     }
+    if (options.beforeUpdate) {
+      options.beforeUpdate(nextVNode);
+    }
     const type = nextVNode.type;
     const nextInput = normalizeRoot(nextVNode.flags & VNodeFlags.ForwardRef ? type.render(nextProps, nextRef, context) : type(nextProps, context));
 
@@ -465,6 +468,9 @@ function patchFunctionalComponent(lastVNode, nextVNode, parentDOM, context, isSV
     nextVNode.children = nextInput;
     if (nextHooksDefined && isFunction(nextRef.onComponentDidUpdate)) {
       nextRef.onComponentDidUpdate(lastProps, nextProps);
+    }
+    if (options.afterUpdate) {
+      options.afterUpdate(nextVNode);
     }
   } else {
     nextVNode.children = lastInput;
