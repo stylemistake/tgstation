@@ -31,13 +31,13 @@ module.exports = (env = {}, argv) => {
       chunkFilename: '[name].chunk.js',
     },
     resolve: {
-      extensions: ['.mjs', '.js', '.jsx'],
+      extensions: ['.mjs', '.js', '.jsx', '.ts'],
       alias: {},
     },
     module: {
       rules: [
         {
-          test: /\.m?jsx?$/,
+          test: /\.m?(js|ts)x?$/,
           use: [
             {
               loader: 'babel-loader',
@@ -53,9 +53,11 @@ module.exports = (env = {}, argv) => {
                       ie: '8',
                     },
                   }],
+                  ['@babel/preset-typescript', {}],
                 ],
                 plugins: [
                   '@babel/plugin-transform-jscript',
+                  '@babel/plugin-proposal-class-properties',
                   'babel-plugin-inferno',
                   'babel-plugin-transform-remove-console',
                 ],

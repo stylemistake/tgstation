@@ -1,0 +1,11 @@
+{
+  "name": "inferno",
+  "version": "7.3.2",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "inferno-shared": "7.3.2",
+    "inferno-vnode-flags": "7.3.2"
+  }
+}
