@@ -1,6 +1,5 @@
 macro "default"
 
-
 menu "menu"
 	elem
 		name = "&File"
@@ -306,4 +305,3 @@ window "statwindow"
 		anchor2 = 100,100
 		is-default = true
 		saved-params = ""
-

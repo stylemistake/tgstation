@@ -11,6 +11,8 @@
 	var/status = TGUI_WINDOW_CLOSED
 	var/locked = FALSE
 	var/datum/tgui/locked_by
+	var/datum/subscriber_object
+	var/subscriber_delegate
 	var/fatally_errored = FALSE
 	var/message_queue
 	var/sent_assets = list()
@@ -26,9 +28,9 @@
 /datum/tgui_window/New(client/client, id, pooled = FALSE)
 	src.id = id
 	src.client = client
+	src.client.tgui_windows[id] = src
 	src.pooled = pooled
 	if(pooled)
-		client.tgui_windows[id] = src
 		src.pool_index = TGUI_WINDOW_INDEX(id)
 
 /**
@@ -107,8 +109,8 @@
  * Acquire the window lock. Pool will not be able to provide this window
  * to other UIs for the duration of the lock.
  *
- * Can be given an optional tgui datum, which will hook its on_message
- * callback into the message stream.
+ * Can be given an optional tgui datum, which will be automatically
+ * subscribed to incoming messages via the on_message proc.
  *
  * optional ui /datum/tgui
  */
@@ -117,6 +119,8 @@
 	locked_by = ui
 
 /**
+ * public
+ *
  * Release the window lock.
  */
 /datum/tgui_window/proc/release_lock()
@@ -125,6 +129,28 @@
 		sent_assets = list()
 	locked = FALSE
 	locked_by = null
+
+/**
+ * public
+ *
+ * Subscribes the datum to consume window messages on a specified proc.
+ *
+ * Note, that this supports only one subscriber, because code for that
+ * is simpler and therefore faster. If necessary, this can be rewritten
+ * to support multiple subscribers.
+ */
+/datum/tgui_window/proc/subscribe(datum/object, delegate)
+	subscriber_object = object
+	subscriber_delegate = delegate
+
+/**
+ * public
+ *
+ * Unsubscribes the datum. Do not forget to call this when cleaning up.
+ */
+/datum/tgui_window/proc/unsubscribe(datum/object)
+	subscriber_object = null
+	subscriber_delegate = null
 
 /**
  * public
@@ -222,14 +248,22 @@
 				for(var/asset in sent_assets)
 					send_asset(asset)
 			status = TGUI_WINDOW_READY
+			flush_message_queue()
 		if("log")
 			if(href_list["fatal"])
 				fatally_errored = TRUE
 	// Pass message to UI that requested the lock
 	if(locked && locked_by)
-		locked_by.on_message(type, payload, href_list)
-		flush_message_queue()
-		return
+		var/prevent_default = locked_by.on_message(type, payload, href_list)
+		if(prevent_default)
+			return
+	// Pass message to the subscriber
+	else if(subscriber_object)
+		var/prevent_default = call(
+			subscriber_object,
+			subscriber_delegate)(type, payload, href_list)
+		if(prevent_default)
+			return
 	// If not locked, handle these message types
 	switch(type)
 		if("suspend")

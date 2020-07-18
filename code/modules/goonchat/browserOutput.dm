@@ -19,7 +19,7 @@ For the main html chat area
 	/// Has the client loaded the browser output area?
 	var/loaded = FALSE
 	/// If they haven't loaded chat, this is where messages will go until they do
-	var/list/messageQueue 
+	var/list/messageQueue
 	var/cookieSent = FALSE // Has the client sent a cookie for analysis
 	var/broken = FALSE
 	var/list/connectionHistory //Contains the connection history passed from chat cookie
@@ -319,6 +319,14 @@ For the main html chat area
 		to_chat_immediate(target, message, handle_whitespace, trailing_newline, confidential)
 		return
 	SSchat.queue(target, message, handle_whitespace, trailing_newline, confidential)
+	SSchat.tgui_queue(target, list(
+		"text" = message,
+		"flags" = list(
+			handle_whitespace,
+			trailing_newline,
+			confidential,
+		),
+	))
 
 /// Dark mode light mode stuff. Yell at KMC if this breaks! (See darkmode.dm for documentation)
 /datum/chat_output/proc/swaptolightmode()

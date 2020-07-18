@@ -102,7 +102,7 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 		return
 
 	// Tgui Topic middleware
-	if(!tgui_Topic(href_list))
+	if(tgui_Topic(href_list))
 		return
 
 	// Admin PM
@@ -324,6 +324,9 @@ GLOBAL_LIST_EMPTY(external_rsc_urls)
 		update_movement_keys()
 
 	chatOutput.start() // Starts the chat
+
+	// Setup tgui panel
+	tgui_panel_setup(src)
 
 	if(alert_mob_dupe_login)
 		spawn()

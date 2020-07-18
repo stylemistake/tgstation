@@ -7,11 +7,12 @@
 import { flow } from 'common/fp';
 import { applyMiddleware, combineReducers, createStore as createReduxStore } from 'common/redux';
 import { Component } from 'inferno';
+import { assetMiddleware } from './assets';
 import { backendMiddleware, backendReducer } from './backend';
 import { debugReducer } from './debug';
 import { hotKeyMiddleware } from './hotkeys';
 import { createLogger } from './logging';
-import { assetMiddleware } from './assets';
+import { chatMiddleware } from './panel/chat';
 
 const logger = createLogger('store');
 
@@ -29,6 +30,7 @@ export const createStore = () => {
     assetMiddleware,
     hotKeyMiddleware,
     backendMiddleware,
+    chatMiddleware,
   ];
   return createReduxStore(reducer,
     applyMiddleware(...middleware.filter(Boolean)));

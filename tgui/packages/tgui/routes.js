@@ -45,6 +45,9 @@ export const getRoutedComponent = state => {
       return require('./debug/KitchenSink').KitchenSink;
     }
   }
+  if (config.panel) {
+    return require('./panel/Panel').Panel;
+  }
   const name = config?.interface;
   let esModule;
   try {
