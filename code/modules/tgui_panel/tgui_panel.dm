@@ -4,7 +4,7 @@
 
 /datum/tgui_panel/New(client/client)
 	src.client = client
-	window = new(client, "tgui-panel")
+	window = new(client, "browseroutput")
 	window.subscribe(src, .proc/on_message)
 
 /datum/tgui_panel/Del()
@@ -14,9 +14,10 @@
 
 /datum/tgui_panel/proc/initialize()
 	window.initialize(inline_assets = list(
-		get_asset_datum(/datum/asset/simple/tgui),
+		get_asset_datum(/datum/asset/simple/tgui_panel),
 	))
 	window.send_asset(get_asset_datum(/datum/asset/simple/fontawesome))
+	client.force_dark_theme()
 
 /datum/tgui_panel/proc/on_message(type, list/payload)
 	if(type == "ready")
@@ -24,9 +25,11 @@
 			"config" = list(
 				"panel" = list(),
 				"window" = list(
-					"fancy" = client.prefs.tgui_fancy,
-					"locked" = client.prefs.tgui_lock,
+					"fancy" = FALSE,
+					"locked" = FALSE,
 				),
 			),
 		))
+		winset(client, "output", "is-visible=false")
+		winset(client, "browseroutput", "is-disabled=false;is-visible=true")
 	return FALSE

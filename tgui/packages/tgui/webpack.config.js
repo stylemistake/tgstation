@@ -30,6 +30,9 @@ module.exports = (env = {}, argv) => {
       tgui: [
         path.resolve(__dirname, './index.js'),
       ],
+      'tgui-panel': [
+        path.resolve(__dirname, '../tgui-panel/index.js'),
+      ],
     },
     output: {
       path: argv.devServer

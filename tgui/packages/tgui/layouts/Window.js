@@ -107,8 +107,6 @@ const WindowContent = props => {
     children,
     ...rest
   } = props;
-  // A bit lazy to actually write styles for it,
-  // so we simply include a Box with margins.
   return (
     <Layout.Content
       className={classes([

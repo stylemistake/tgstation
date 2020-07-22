@@ -8,6 +8,7 @@
 	var/client/client
 	var/pooled
 	var/pool_index
+	var/is_browser = FALSE
 	var/status = TGUI_WINDOW_CLOSED
 	var/locked = FALSE
 	var/datum/tgui/locked_by
@@ -71,13 +72,15 @@
 				inline_styles += "<link rel=\"stylesheet\" type=\"text/css\" href=\"[url]\">\n"
 			else if(copytext(name, -3) == ".js")
 				inline_scripts += "<script type=\"text/javascript\" defer src=\"[url]\"></script>\n"
-		asset.send()
+		asset.send(client)
 	html = replacetextEx(html, "<!-- tgui:styles -->\n", inline_styles)
 	html = replacetextEx(html, "<!-- tgui:scripts -->\n", inline_scripts)
 	// Open the window
 	client << browse(html, "window=[id];[options]")
 	// Instruct the client to signal UI when the window is closed.
 	winset(client, id, "on-close=\"uiclose [id]\"")
+	// Detect whether the control is a browser
+	is_browser = winexists(client, id) == "BROWSER"
 
 /**
  * public
@@ -203,7 +206,10 @@
 			message_queue = list()
 		message_queue += list(message)
 		return
-	client << output(message, "[id].browser:update")
+	if(is_browser)
+		client << output(message, "[id]:update")
+	else
+		client << output(message, "[id].browser:update")
 
 /**
  * public
@@ -215,12 +221,12 @@
 /datum/tgui_window/proc/send_asset(datum/asset/asset)
 	if(!client || !asset)
 		return
+	sent_assets += list(asset)
+	asset.send(client)
 	if(istype(asset, /datum/asset/spritesheet))
 		var/datum/asset/spritesheet/spritesheet = asset
 		send_message("asset/stylesheet", spritesheet.css_filename())
 	send_message("asset/mappings", asset.get_url_mappings())
-	sent_assets += list(asset)
-	asset.send(client)
 
 /**
  * private

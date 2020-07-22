@@ -323,8 +323,6 @@ GLOBAL_LIST_EMPTY(external_rsc_urls)
 		set_macros()
 		update_movement_keys()
 
-	chatOutput.start() // Starts the chat
-
 	// Setup tgui panel
 	tgui_panel_setup(src)
 
