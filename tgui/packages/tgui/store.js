@@ -26,14 +26,16 @@ export const createStore = () => {
     }),
   ]);
   const middleware = [
-    process.env.NODE_ENV !== 'production' && loggingMiddleware,
     assetMiddleware,
     hotKeyMiddleware,
     backendMiddleware,
     chatMiddleware,
   ];
+  if (process.env.NODE_ENV !== 'production') {
+    middleware.unshift(loggingMiddleware);
+  }
   return createReduxStore(reducer,
-    applyMiddleware(...middleware.filter(Boolean)));
+    applyMiddleware(...middleware));
 };
 
 const loggingMiddleware = store => next => action => {
@@ -60,4 +62,8 @@ export class StoreProvider extends Component {
 
 export const useDispatch = context => {
   return context.store.dispatch;
+};
+
+export const useSelector = (context, selector) => {
+  return selector(context.store.getState());
 };
