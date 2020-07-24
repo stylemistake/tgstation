@@ -188,28 +188,36 @@
  * required payload list Message payload
  * optional force bool Send regardless of the ready status.
  */
-/datum/tgui_window/proc/send_message(type, list/payload, force)
+/datum/tgui_window/proc/send_message(type, payload, force)
 	if(!client)
 		return
-	var/message = json_encode(list(
-		"type" = type,
-		"payload" = payload,
-	))
-	// Strip #255/improper.
-	message = replacetext(message, "\proper", "")
-	message = replacetext(message, "\improper", "")
-	// Pack for sending via output()
-	message = url_encode(message)
+	var/message = TGUI_CREATE_MESSAGE(type, payload)
 	// Place into queue if window is still loading
 	if(!force && status != TGUI_WINDOW_READY)
 		if(!message_queue)
 			message_queue = list()
 		message_queue += list(message)
 		return
-	if(is_browser)
-		client << output(message, "[id]:update")
-	else
-		client << output(message, "[id].browser:update")
+	client << output(message, is_browser ? "[id]:update" : "[id].browser:update")
+
+/**
+ * public
+ *
+ * Sends a raw payload to tgui window.
+ *
+ * required message string JSON+urlencoded blob to send.
+ * optional force bool Send regardless of the ready status.
+ */
+/datum/tgui_window/proc/send_raw_message(message, force)
+	if(!client)
+		return
+	// Place into queue if window is still loading
+	if(!force && status != TGUI_WINDOW_READY)
+		if(!message_queue)
+			message_queue = list()
+		message_queue += list(message)
+		return
+	client << output(message, is_browser ? "[id]:update" : "[id].browser:update")
 
 /**
  * public
