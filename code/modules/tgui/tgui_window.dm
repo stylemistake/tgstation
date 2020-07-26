@@ -229,7 +229,7 @@
 /datum/tgui_window/proc/send_asset(datum/asset/asset)
 	if(!client || !asset)
 		return
-	sent_assets += list(asset)
+	sent_assets |= list(asset)
 	asset.send(client)
 	if(istype(asset, /datum/asset/spritesheet))
 		var/datum/asset/spritesheet/spritesheet = asset
