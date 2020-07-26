@@ -253,7 +253,7 @@
  *
  * Callback for handling incoming tgui messages.
  */
-/datum/tgui_window/proc/on_message(type, list/payload, list/href_list)
+/datum/tgui_window/proc/on_message(type, payload, href_list)
 	switch(type)
 		if("ready")
 			// Status can be READY if user has refreshed the window.
