@@ -1,6 +1,6 @@
 const initialState = {
   visible: false,
-  fontSize: 12,
+  fontSize: 9,
   lineHeight: 1.5,
   theme: 'dark',
 };
