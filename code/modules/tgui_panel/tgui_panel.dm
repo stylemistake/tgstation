@@ -60,6 +60,7 @@
 		window.send_message("ping")
 		return
 	window.initialize(inline_assets = list(
+		get_asset_datum(/datum/asset/simple/tgui_common),
 		get_asset_datum(/datum/asset/simple/tgui_panel),
 	))
 	window.send_asset(get_asset_datum(/datum/asset/simple/fontawesome))
