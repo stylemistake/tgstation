@@ -1,8 +1,9 @@
 import { createUuid } from 'common/uuid';
 
 export const MAX_VISIBLE_MESSAGES = 2500;
-export const MAX_PERSISTED_MESSAGES = 2500;
-export const SAVE_INTERVAL = 10000;
+export const MAX_PERSISTED_MESSAGES = 1000;
+export const MESSAGE_SAVE_INTERVAL = 10000;
+export const MESSAGE_PRUNE_INTERVAL = 60000;
 export const COMBINE_MAX_MESSAGES = 5;
 export const COMBINE_MAX_TIME_WINDOW = 5000;
 

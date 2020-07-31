@@ -1,15 +1,13 @@
-import { perf } from 'common/perf';
 import { storage } from 'common/storage';
 import { createLogger } from 'tgui/logging';
 import { changeChatPage, loadChat, updateMessageCount } from './actions';
-import { MAX_PERSISTED_MESSAGES, SAVE_INTERVAL } from './constants';
+import { MAX_PERSISTED_MESSAGES, MESSAGE_SAVE_INTERVAL } from './constants';
 import { chatRenderer, createReconnectedMessage, serializeMessage } from './renderer';
 import { selectChat } from './selectors';
 
 const logger = createLogger('chat/middleware');
 
-const saveChatToStorage = store => {
-  perf.mark('chat/save/start');
+const saveChatToStorage = async store => {
   const state = selectChat(store.getState());
   const fromIndex = Math.max(0,
     chatRenderer.messages.length - MAX_PERSISTED_MESSAGES);
@@ -17,53 +15,23 @@ const saveChatToStorage = store => {
     .slice(fromIndex)
     .filter(message => message.type !== 'internal')
     .map(message => serializeMessage(message));
-  perf.mark('chat/save/storage');
   storage.set('chat-state', state);
   storage.set('chat-messages', messages);
-  perf.mark('chat/save/finish');
-  if (process.env.NODE_ENV !== 'production') {
-    logger.debug('chat saving took', perf.measure(
-      'chat/save/start',
-      'chat/save/storage'));
-    logger.debug('out of which wasted on storage', perf.measure(
-      'chat/save/storage',
-      'chat/save/finish'));
-  }
 };
 
 const loadChatFromStorage = async store => {
-  logger.log('loading');
-  perf.mark('chat/load/start');
   storage.get('chat-state').then(state => {
-    perf.mark('chat/load/loadedState');
-    if (!state) {
-      return;
+    if (state) {
+      store.dispatch(loadChat(state));
     }
-    store.dispatch(loadChat(state));
-    perf.mark('chat/load/finishState');
-    logger.debug('load state took', perf.measure(
-      'chat/load/start',
-      'chat/load/finishState'));
-    logger.debug('out of which is retrieving', perf.measure(
-      'chat/load/start',
-      'chat/load/loadedState'));
   });
   storage.get('chat-messages').then(messages => {
-    perf.mark('chat/load/loadedMessages');
-    if (!messages) {
-      return;
+    if (messages) {
+      chatRenderer.processBatch([
+        ...messages,
+        createReconnectedMessage(),
+      ]);
     }
-    chatRenderer.processBatch([
-      ...messages,
-      createReconnectedMessage(),
-    ]);
-    perf.mark('chat/load/finishMessages');
-    logger.debug('load messages took', perf.measure(
-      'chat/load/start',
-      'chat/load/finishMessages'));
-    logger.debug('out of which is retrieving', perf.measure(
-      'chat/load/start',
-      'chat/load/loadedMessages'));
   });
 };
 
@@ -72,7 +40,7 @@ export const chatMiddleware = store => {
   chatRenderer.events.on('batchProcessed', countByType => {
     store.dispatch(updateMessageCount(countByType));
   });
-  setInterval(() => saveChatToStorage(store), SAVE_INTERVAL);
+  setInterval(() => saveChatToStorage(store), MESSAGE_SAVE_INTERVAL);
   return next => action => {
     const { type, payload } = action;
     if (!initialized) {
@@ -87,7 +55,7 @@ export const chatMiddleware = store => {
       return;
     }
     if (type === changeChatPage.type) {
-      const { page } = payload;
+      const page = payload;
       chatRenderer.changePage(page);
       return next(action);
     }

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'common/events';
 import { classes } from 'common/react';
 import { createLogger } from 'tgui/logging';
-import { COMBINE_MAX_MESSAGES, COMBINE_MAX_TIME_WINDOW, DEFAULT_PAGE, MESSAGE_TYPES } from './constants';
+import { COMBINE_MAX_MESSAGES, COMBINE_MAX_TIME_WINDOW, DEFAULT_PAGE, MAX_VISIBLE_MESSAGES, MESSAGE_PRUNE_INTERVAL, MESSAGE_TYPES } from './constants';
 import { canPageAcceptType } from './selectors';
 
 const logger = createLogger('chatRenderer');
@@ -102,6 +102,8 @@ class ChatRenderer {
         logger.debug('tracking', this.scrollTracking);
       }
     };
+    // Periodic message pruning
+    setInterval(() => this.pruneMessages(), MESSAGE_PRUNE_INTERVAL);
   }
 
   mount(node) {
@@ -234,6 +236,20 @@ class ChatRenderer {
     }
     // Notify subscribers that we have processed the batch
     this.events.emit('batchProcessed', countByType);
+  }
+
+  pruneMessages() {
+    if (!this.rootNode) {
+      return;
+    }
+    const messages = this.visibleMessages;
+    const fromIndex = Math.max(0, messages.length - MAX_VISIBLE_MESSAGES);
+    this.visibleMessages = messages.slice(fromIndex);
+    for (let i = 0; i < fromIndex; i++) {
+      const message = messages[i];
+      this.rootNode.removeChild(message.node);
+    }
+    logger.debug(`pruned ${fromIndex} messages`);
   }
 }
 

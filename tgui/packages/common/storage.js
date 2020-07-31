@@ -152,7 +152,7 @@ class IndexedDbBackend {
 }
 
 export const storage = (
-  // testIndexedDb() && new IndexedDbBackend()
-  testLocalStorage() && new LocalStorageBackend()
+  testIndexedDb() && new IndexedDbBackend()
+  || testLocalStorage() && new LocalStorageBackend()
   || new MemoryBackend()
 );
