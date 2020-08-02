@@ -159,12 +159,11 @@
 		"v4shim.css"          = 'html/font-awesome/css/v4-shims.min.css'
 	)
 
-/datum/asset/spritesheet/goonchat
+/datum/asset/spritesheet/chat
 	name = "chat"
 
-/datum/asset/spritesheet/goonchat/register()
+/datum/asset/spritesheet/chat/register()
 	InsertAll("emoji", 'icons/emoji.dmi')
-
 	// pre-loading all lanugage icons also helps to avoid meta
 	InsertAll("language", 'icons/misc/language.dmi')
 	// catch languages which are pulling icons from another file
@@ -174,7 +173,6 @@
 		if (icon != 'icons/misc/language.dmi')
 			var/icon_state = initial(L.icon_state)
 			Insert("language-[icon_state]", icon, icon_state=icon_state)
-
 	..()
 
 /datum/asset/simple/permissions
