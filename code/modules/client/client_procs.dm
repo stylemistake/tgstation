@@ -204,6 +204,9 @@ GLOBAL_LIST_EMPTY(external_rsc_urls)
 	GLOB.clients += src
 	GLOB.directory[ckey] = src
 
+	// Instantiate tgui panel
+	tgui_panel = new(src)
+
 	GLOB.ahelp_tickets.ClientLogin(src)
 	var/connecting_admin = FALSE //because de-admined admins connecting should be treated like admins.
 	//Admin Authorisation
@@ -308,8 +311,8 @@ GLOBAL_LIST_EMPTY(external_rsc_urls)
 		set_macros()
 		update_movement_keys()
 
-	// Setup tgui panel
-	tgui_panel_setup(src)
+	// Initialize tgui panel
+	tgui_panel.initialize()
 
 	if(alert_mob_dupe_login)
 		spawn()
