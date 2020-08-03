@@ -15,6 +15,7 @@ import './polyfills/ie8';
 import './polyfills/dom4';
 import './polyfills/css-om';
 import './polyfills/inferno';
+import './focus';
 
 // Themes
 import './styles/main.scss';

@@ -7,6 +7,7 @@
 import { classes } from 'common/react';
 import { Component, createRef } from 'inferno';
 import { computeBoxClassName, computeBoxProps } from '../components/Box';
+import { focusNodeOnMouseOver } from '../focus';
 
 export const Layout = props => {
   const {
@@ -34,21 +35,14 @@ class LayoutContent extends Component {
   constructor() {
     super();
     this.ref = createRef();
-    this.refocusLayout = () => {
-      this.ref.current.focus();
-    };
   }
 
   componentDidMount() {
-    const node = this.ref.current;
-    node.addEventListener('mouseenter', this.refocusLayout);
-    node.addEventListener('click', this.refocusLayout);
+    this.unsubscribe = focusNodeOnMouseOver(this.ref.current);
   }
 
   componentWillUnmount() {
-    const node = this.ref.current;
-    node.removeEventListener('mouseenter', this.refocusLayout);
-    node.removeEventListener('click', this.refocusLayout);
+    this.unsubscribe();
   }
 
   render() {

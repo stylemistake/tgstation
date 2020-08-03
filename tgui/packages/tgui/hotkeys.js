@@ -4,6 +4,7 @@
  * @license MIT
  */
 
+import { subscribeToLossOfFocus } from './focus';
 import { createLogger } from './logging';
 
 const logger = createLogger('hotkeys');
@@ -264,22 +265,6 @@ const handleHotKey = (e, eventType, store) => {
       subscriberFn(store, keyData);
     }
   }
-};
-
-/**
- * Subscribe to an event when browser window has been completely
- * unfocused. Conveniently fires events when the browser window
- * is closed from the outside.
- */
-const subscribeToLossOfFocus = listenerFn => {
-  let timeout;
-  document.addEventListener('focusout', () => {
-    timeout = setTimeout(listenerFn);
-  });
-  document.addEventListener('focusin', () => {
-    clearTimeout(timeout);
-  });
-  window.addEventListener('beforeunload', listenerFn);
 };
 
 /**
