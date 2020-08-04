@@ -9,27 +9,25 @@ const queue = [];
 const subscribers = [];
 
 const ensureConnection = () => {
-  if (process.env.NODE_ENV !== 'production') {
-    if (!window.WebSocket) {
-      return;
-    }
-    if (!socket || socket.readyState === WebSocket.CLOSED) {
-      const DEV_SERVER_IP = process.env.DEV_SERVER_IP || '127.0.0.1';
-      socket = new WebSocket(`ws://${DEV_SERVER_IP}:3000`);
-      socket.onopen = () => {
-        // Empty the message queue
-        while (queue.length !== 0) {
-          const msg = queue.shift();
-          socket.send(msg);
-        }
-      };
-      socket.onmessage = event => {
-        const msg = JSON.parse(event.data);
-        for (let subscriber of subscribers) {
-          subscriber(msg);
-        }
-      };
-    }
+  if (!window.WebSocket) {
+    return;
+  }
+  if (!socket || socket.readyState === WebSocket.CLOSED) {
+    const DEV_SERVER_IP = process.env.DEV_SERVER_IP || '127.0.0.1';
+    socket = new WebSocket(`ws://${DEV_SERVER_IP}:3000`);
+    socket.onopen = () => {
+      // Empty the message queue
+      while (queue.length !== 0) {
+        const msg = queue.shift();
+        socket.send(msg);
+      }
+    };
+    socket.onmessage = event => {
+      const msg = JSON.parse(event.data);
+      for (let subscriber of subscribers) {
+        subscriber(msg);
+      }
+    };
   }
 };
 
@@ -92,30 +90,29 @@ const serializeObject = obj => {
 };
 
 export const sendMessage = msg => {
-  if (process.env.NODE_ENV !== 'production') {
-    const json = serializeObject(msg);
-    // Send message using WebSocket
-    if (window.WebSocket) {
-      ensureConnection();
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(json);
-      }
-      else {
-        // Keep only 100 latest messages in the queue
-        if (queue.length > 100) {
-          queue.shift();
-        }
-        queue.push(json);
-      }
+  const json = serializeObject(msg);
+  // Send message using WebSocket
+  if (window.WebSocket) {
+    ensureConnection();
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(json);
     }
-    // Send message using plain HTTP request.
     else {
-      const DEV_SERVER_IP = process.env.DEV_SERVER_IP || '127.0.0.1';
-      const req = new XMLHttpRequest();
-      req.open('POST', `http://${DEV_SERVER_IP}:3001`);
-      req.timeout = 500;
-      req.send(json);
+      // Keep only 100 latest messages in the queue
+      if (queue.length > 100) {
+        queue.shift();
+      }
+      queue.push(json);
     }
+    return;
+  }
+  // Send message using plain HTTP request.
+  if (process.env.NODE_ENV !== 'production') {
+    const DEV_SERVER_IP = process.env.DEV_SERVER_IP || '127.0.0.1';
+    const req = new XMLHttpRequest();
+    req.open('POST', `http://${DEV_SERVER_IP}:3001`);
+    req.timeout = 500;
+    req.send(json);
   }
 };
 
@@ -136,16 +133,22 @@ export const sendLogEntry = (level, ns, ...args) => {
 };
 
 export const setupHotReloading = () => {
-  if (process.env.NODE_ENV !== 'production'
-      && process.env.WEBPACK_HMR_ENABLED
-      && window.WebSocket) {
-    if (module.hot) {
-      ensureConnection();
-      sendLogEntry(0, null, 'setting up hot reloading');
-      subscribe(msg => {
-        const { type } = msg;
-        sendLogEntry(0, null, 'received', type);
-        if (type === 'hotUpdate') {
+  if (window.WebSocket) {
+    ensureConnection();
+    sendLogEntry(0, null, 'setting up hot reloading');
+    if (process.env.NODE_ENV === 'production') {
+      const sendHotUpdateRequest = () => sendMessage({
+        type: 'hotUpdate/request',
+      });
+      setInterval(sendHotUpdateRequest, 15000);
+      setTimeout(sendHotUpdateRequest, 1000);
+    }
+    subscribe(msg => {
+      const { type } = msg;
+      sendLogEntry(0, null, 'received', type);
+      if (type === 'hotUpdate') {
+        // Use Webpack HMR
+        if (module.hot && process.env.WEBPACK_HMR_ENABLED) {
           const status = module.hot.status();
           if (status !== 'idle') {
             sendLogEntry(0, null, 'hot reload status:', status);
@@ -164,7 +167,11 @@ export const setupHotReloading = () => {
               sendLogEntry(0, null, 'reload error', err);
             });
         }
-      });
-    }
+        // Otherwise, reload the page
+        else {
+          location.reload();
+        }
+      }
+    });
   }
 };

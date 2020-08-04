@@ -4,11 +4,12 @@
  * @license MIT
  */
 
+import { EventEmitter } from 'common/events.js';
 import { createLogger, directLog } from 'common/logging.js';
 import http from 'http';
 import { inspect } from 'util';
 import WebSocket from 'ws';
-import { retrace, loadSourceMaps } from './retrace.js';
+import { loadSourceMaps, retrace } from './retrace.js';
 
 const logger = createLogger('link');
 
@@ -21,6 +22,7 @@ export const setupLink = () => new LinkServer();
 class LinkServer {
   constructor() {
     logger.log('setting up');
+    this.events = new EventEmitter();
     this.wss = null;
     this.setupWebSocketLink();
     this.setupHttpLink();
@@ -68,6 +70,13 @@ class LinkServer {
 
   handleLinkMessage(ws, msg) {
     const { type, payload } = msg;
+    if (type === 'ping') {
+      this.sendMessage(ws, {
+        type: 'pingReply',
+        payload,
+      });
+      return;
+    }
     if (type === 'log') {
       const { level, ns, args } = payload;
       // Skip debug messages
@@ -95,7 +104,7 @@ class LinkServer {
       }
       return;
     }
-    logger.log('unhandled message', msg);
+    this.events.emit('message', ws, msg);
   }
 
   sendMessage(ws, msg) {
@@ -109,6 +118,10 @@ class LinkServer {
       const json = JSON.stringify(msg);
       client.send(json);
     }
+  }
+
+  subscribe(subscriber) {
+    this.events.on('message', subscriber);
   }
 }
 

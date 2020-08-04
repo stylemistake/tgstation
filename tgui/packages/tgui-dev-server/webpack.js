@@ -5,6 +5,7 @@
  */
 
 import { createLogger } from 'common/logging.js';
+import { sleep } from 'common/timer.js';
 import fs from 'fs';
 import { createRequire } from 'module';
 import { promisify } from 'util';
@@ -22,6 +23,7 @@ export const getWebpackConfig = async options => {
 };
 
 export const setupWebpack = async config => {
+  let buildIsReady = false;
   logger.log('setting up');
   const bundleDir = config.output.path;
   // Setup link
@@ -43,10 +45,26 @@ export const setupWebpack = async config => {
     await loadSourceMaps(bundleDir);
     // Reload cache
     await reloadByondCache(bundleDir);
+    // Ready to reload clients
+    buildIsReady = true;
     // Notify all clients that update has happened
     link.broadcastMessage({
       type: 'hotUpdate',
     });
+  });
+  // Subscribe to hot update requests
+  link.subscribe(async (ws, msg) => {
+    const { type, payload } = msg;
+    if (type === 'hotUpdate/request' && buildIsReady) {
+      // Sleep for a second to let the BYOND cache finish loading
+      await sleep(1000);
+      // Reload cache
+      await reloadByondCache(bundleDir);
+      // Notify the client
+      link.sendMessage(ws, {
+        type: 'hotUpdate',
+      });
+    }
   });
   // Start watching
   logger.log('watching for changes');

@@ -71,8 +71,8 @@ const setupApp = () => {
   }
 
   // Enable hot module reloading
+  setupHotReloading();
   if (module.hot) {
-    setupHotReloading();
     module.hot.accept([
       './components',
       './layouts',
