@@ -12,6 +12,7 @@ import { useGame } from './game';
 import { Notifications } from './Notifications';
 import { PingIndicator } from './ping';
 import { SettingsPanel, useSettings } from './settings';
+import { CommandBar } from './commands/CommandBar';
 
 export const Panel = (props, context) => {
   // IE8-10: Needs special treatment due to missing Flex support
@@ -107,6 +108,9 @@ export const Panel = (props, context) => {
               )}
             </Notifications>
           </Section>
+        </Flex.Item>
+        <Flex.Item mt={1}>
+          <CommandBar />
         </Flex.Item>
       </Flex>
     </Pane>
