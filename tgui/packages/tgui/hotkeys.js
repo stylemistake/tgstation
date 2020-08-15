@@ -132,28 +132,10 @@ export const releaseHeldKeys = () => {
 export const setupHotKeys = () => {
   // Read macros
   Byond.winget('default.*').then(data => {
-    // Group each macro by ref
-    const groupedByRef = {};
-    for (let key of Object.keys(data)) {
-      const keyPath = key.split('.');
-      const ref = keyPath[1];
-      const prop = keyPath[2];
-      if (ref && prop) {
-        if (!groupedByRef[ref]) {
-          groupedByRef[ref] = {};
-        }
-        groupedByRef[ref][prop] = data[key];
-      }
-    }
-    // Insert macros
-    const escapedQuotRegex = /\\"/g;
-    const unescape = str => str
-      .substring(1, str.length - 1)
-      .replace(escapedQuotRegex, '"');
-    for (let ref of Object.keys(groupedByRef)) {
-      const macro = groupedByRef[ref];
-      const byondKeyName = unescape(macro.name);
-      byondMacros[byondKeyName] = unescape(macro.command);
+    const macros = data?.default;
+    for (let ref of Object.keys(macros)) {
+      const { name, command } = macros[ref];
+      byondMacros[name] = command;
     }
     logger.debug('loaded macros', byondMacros);
   });

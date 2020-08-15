@@ -8,11 +8,11 @@ import { Button, Flex, Section } from 'tgui/components';
 import { Pane } from 'tgui/layouts';
 import { NowPlayingWidget, useAudio } from './audio';
 import { ChatPanel, ChatTabs } from './chat';
+import { CommandBar } from './commands';
 import { useGame } from './game';
 import { Notifications } from './Notifications';
 import { PingIndicator } from './ping';
 import { SettingsPanel, useSettings } from './settings';
-import { CommandBar } from './commands/CommandBar';
 
 export const Panel = (props, context) => {
   // IE8-10: Needs special treatment due to missing Flex support

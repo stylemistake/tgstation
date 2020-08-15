@@ -133,12 +133,44 @@ window.Byond = (function () {
 
   Byond.winget = function (id, propName) {
     var isArray = propName instanceof Array;
-    var isSpecific = propName && propName !== '*' && !isArray;
+    var property = isArray && propName.join(',') || propName || '*';
     var promise = Byond.callAsync('winget', {
       id: id,
-      property: isArray && propName.join(',') || propName || '*',
+      property: property,
     });
-    if (isSpecific) {
+    // User requested all properties
+    if (property === '*') {
+      // Group keypaths as individual objects, and try to parse
+      // values as JSON if they are strings.
+      promise = promise.then(function (data) {
+        var result = {};
+        for (var key in data) {
+          if (hasOwn.call(data, key)) {
+            var keyPath = key.split('.');
+            var targetKey = keyPath.pop();
+            var target = result;
+            for (var i = 0; i < keyPath.length; i++) {
+              var part = keyPath[i];
+              if (target[part] === undefined) {
+                target[part] = {};
+              }
+              target = target[part];
+            }
+            var value = data[key];
+            if (typeof value === 'string') {
+              try {
+                value = JSON.parse(value);
+              }
+              catch (err) {}
+            }
+            target[targetKey] = value;
+          }
+        }
+        return result;
+      });
+    }
+    // User requested a specific property
+    else if (!isArray) {
       promise = promise.then(function (props) {
         return props[propName];
       });

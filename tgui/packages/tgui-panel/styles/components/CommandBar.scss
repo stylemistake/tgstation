@@ -1,0 +1,49 @@
+/**
+ * Copyright (c) 2020 Aleksej Komarov
+ * SPDX-License-Identifier: MIT
+ */
+
+@use 'sass:color';
+@use '~tgui/styles/base.scss';
+@use '~tgui/styles/colors.scss';
+
+$text-color: base.$color-fg !default;
+$background-color: base.$color-bg-section !default;
+$border-color: rgba(255, 255, 255, 0.25) !default;
+$border-color-focused: #88aaee !default;
+$border-radius: base.$border-radius !default;
+
+.CommandBar {
+  position: relative;
+  color: #fff;
+  background-color: $background-color;
+  border: (1em / 12) solid $border-color;
+  border-radius: $border-radius;
+  font-family: 'Consolas', monospace;
+
+  &:before {
+    content: '>';
+    margin: 0 0.5em;
+  }
+}
+
+.CommandBar--focused {
+  background-color: color.mix(
+    $border-color-focused, #000, 5%);
+  border: (1em / 12) solid $border-color-focused;
+}
+
+.CommandBar__input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  // font-family: Verdana, sans-serif;
+  font-family: 'Consolas', monospace;
+  line-height: 1.5em;
+  height: 1.5em;
+  color: #fff;
+  background-color: transparent;
+  border: 0;
+}

@@ -29,6 +29,7 @@ import { createRenderer } from 'tgui/renderer';
 import { configureStore, StoreProvider } from 'tgui/store';
 import { audioMiddleware, audioReducer } from './audio';
 import { chatMiddleware, chatReducer } from './chat';
+import { commandsMiddleware, configureMacros } from './commands';
 import { gameMiddleware, gameReducer } from './game';
 import { setupPanelFocusHacks } from './panelFocus';
 import { pingMiddleware, pingReducer } from './ping';
@@ -54,6 +55,7 @@ const store = configureStore({
       settingsMiddleware,
       audioMiddleware,
       gameMiddleware,
+      commandsMiddleware,
     ],
   },
 });
@@ -79,6 +81,7 @@ const setupApp = () => {
   });
   setupPanelFocusHacks();
   captureExternalLinks();
+  configureMacros();
 
   // Subscribe for Redux state updates
   store.subscribe(renderApp);
