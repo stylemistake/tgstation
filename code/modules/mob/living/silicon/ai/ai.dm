@@ -145,7 +145,7 @@
 	spark_system.set_up(5, 0, src)
 	spark_system.attach(src)
 
-	verbs += /mob/living/silicon/ai/proc/show_laws_verb
+	add_verb(src, /mob/living/silicon/ai/proc/show_laws_verb)
 
 	aiPDA = new/obj/item/pda/ai(src)
 	aiPDA.owner = real_name
@@ -158,10 +158,10 @@
 	deploy_action.Grant(src)
 
 	if(isturf(loc))
-		verbs.Add(/mob/living/silicon/ai/proc/ai_network_change, \
+		add_verb(src, list(/mob/living/silicon/ai/proc/ai_network_change, \
 		/mob/living/silicon/ai/proc/ai_statuschange, /mob/living/silicon/ai/proc/ai_hologram_change, \
 		/mob/living/silicon/ai/proc/botcall, /mob/living/silicon/ai/proc/control_integrated_radio, \
-		/mob/living/silicon/ai/proc/set_automatic_say_channel)
+		/mob/living/silicon/ai/proc/set_automatic_say_channel))
 
 	GLOB.ai_list += src
 	GLOB.shuttle_caller_list += src

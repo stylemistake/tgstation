@@ -213,7 +213,7 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 		holder.owner = src
 		connecting_admin = TRUE
 	else if(GLOB.deadmins[ckey])
-		verbs += /client/proc/readmin
+		add_verb(src, /client/proc/readmin)
 		connecting_admin = TRUE
 	if(CONFIG_GET(flag/autoadmin))
 		if(!GLOB.admin_datums[ckey])
@@ -243,7 +243,7 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 	fps = (prefs.clientfps < 0) ? RECOMMENDED_FPS : prefs.clientfps
 
 	if(fexists(roundend_report_file()))
-		verbs += /client/proc/show_previous_roundend_report
+		add_verb(src, /client/proc/show_previous_roundend_report)
 
 	var/full_version = "[byond_version].[byond_build ? byond_build : "xxx"]"
 	log_access("Login: [key_name(src)] from [address ? address : "localhost"]-[computer_id] || BYOND v[full_version]")
@@ -443,6 +443,8 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 	view_size.setZoomMode()
 	fit_viewport()
 	Master.UpdateTickRate()
+	if(SSstatpanels.initialized)
+		init_verbs() // do this at the end
 
 //////////////
 //DISCONNECT//
@@ -846,9 +848,9 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 
 /client/proc/add_verbs_from_config()
 	if(CONFIG_GET(flag/see_own_notes))
-		verbs += /client/proc/self_notes
+		add_verb(src, /client/proc/self_notes)
 	if(CONFIG_GET(flag/use_exp_tracking))
-		verbs += /client/proc/self_playtime
+		add_verb(src, /client/proc/self_playtime)
 
 
 #undef UPLOAD_LIMIT
@@ -991,3 +993,94 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 	if(!src)
 		return
 	prefs.save_preferences()
+
+/client/proc/init_verbs() // compiles a full list of verbs and sends it to the browser
+	var/list/verblist = list()
+	var/list/fullverbs = verbs + mob.verbs
+	for(var/L in fullverbs)
+		if(L:hidden)
+			continue
+		if(!istext(L:category))
+			continue
+		var/cleanname = replacetext(L:name, " ", "-") // gotta scrub spaces for commandbar
+		var/cleancategory = L:category
+		verblist[++verblist.len] = list("[cleancategory]", "[cleanname]")
+
+//pass the verb type path to this instead of adding it directly to verbs so the statpanel can update
+/proc/add_verb(target, verb)
+	if(!target)
+		return
+	var/list/V = list()
+	if(istype(target, /client))
+		var/client/C = target
+		if(!islist(verb))
+			C.verbs += verb
+			if(verb:hidden || !verb:category)// no category
+				return
+			V = list("[verb:category]", "[verb:name]")
+			V = url_encode(json_encode(V))
+		else if(islist(verb))
+			for(var/L in verb)
+				if(islist(L)) // list in a list? more likely than you think
+					add_verb(target, L) // just pass it through again til we get the verb
+					continue
+				C.verbs += L
+				if(L:hidden || !L:category)// no category
+					return
+				V[++V.len] = list("[L:category]", "[L:name]")
+				V = url_encode(json_encode(V))
+			C.init_verbs()
+	else if(istype(target, /mob)) // copy pasta for mobs
+		var/mob/M = target
+		if(!islist(verb))
+			M.verbs += verb
+			if(verb:hidden || !verb:category)// no category
+				return
+			V = list("[verb:category]", "[verb:name]")
+			V = url_encode(json_encode(V))
+		else if(islist(verb))
+			for(var/L in verb)
+				if(islist(L)) // list in a list? more likely than you think
+					add_verb(target, L) // just pass it through again til we get the verb
+					continue
+				M.verbs += L
+				if(L:hidden || !L:category)// no category
+					return
+				V[++V.len] = list("[L:category]", "[L:name]")
+				V = url_encode(json_encode(V))
+			M?.client.init_verbs()
+
+
+// same as above
+/proc/remove_verb(target, verb)
+	if(!target)
+		return
+	var/list/V = list()
+	if(istype(target, /client))
+		var/client/C = target
+		if(!islist(verb))
+			C.verbs -= verb
+			V = list("[verb:category]", "[verb:name]")
+			V = url_encode(json_encode(V))
+		else if(islist(verb))
+			for(var/L in verb)
+				if(islist(L)) // list in a list? more likely than you think
+					add_verb(target, L) // just pass it through again til we get the verb
+					continue
+				C.verbs -= L
+				V[++V.len] = list("[L:category]", "[L:name]")
+				V = url_encode(json_encode(V))
+	else if(istype(target, /mob)) // copy pasta for mobs
+		var/mob/M = target
+		if(!islist(verb))
+			M.verbs -= verb
+			V = list("[verb:category]", "[verb:name]")
+			V = url_encode(json_encode(V))
+		else if(islist(verb)) // list of verbs
+			for(var/L in verb) // get verb in list
+				if(islist(L)) // list in a list? more likely than you think
+					add_verb(target, L) // just pass it through again til we get the verb
+					continue
+				M.verbs -= L
+				V[++V.len] = list("[L:category]", "[L:name]")
+				V = url_encode(json_encode(V))
