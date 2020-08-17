@@ -6,4 +6,6 @@
 
 export { CommandBar } from './CommandBar';
 export { configureMacros } from './configureMacros';
+export { useCommands } from './hooks';
 export { commandsMiddleware } from './middleware';
+export { commandsReducer } from './reducer';

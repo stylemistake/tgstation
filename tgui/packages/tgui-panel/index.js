@@ -29,7 +29,7 @@ import { createRenderer } from 'tgui/renderer';
 import { configureStore, StoreProvider } from 'tgui/store';
 import { audioMiddleware, audioReducer } from './audio';
 import { chatMiddleware, chatReducer } from './chat';
-import { commandsMiddleware, configureMacros } from './commands';
+import { commandsMiddleware, commandsReducer, configureMacros } from './commands';
 import { gameMiddleware, gameReducer } from './game';
 import { setupPanelFocusHacks } from './panelFocus';
 import { pingMiddleware, pingReducer } from './ping';
@@ -46,6 +46,7 @@ const store = configureStore({
     game: gameReducer,
     ping: pingReducer,
     settings: settingsReducer,
+    commands: commandsReducer,
   }),
   middleware: {
     pre: [

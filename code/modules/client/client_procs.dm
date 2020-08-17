@@ -443,8 +443,6 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 	view_size.setZoomMode()
 	fit_viewport()
 	Master.UpdateTickRate()
-	if(SSstatpanels.initialized)
-		init_verbs() // do this at the end
 
 //////////////
 //DISCONNECT//
@@ -994,93 +992,50 @@ GLOBAL_LIST_INIT(blacklisted_builds, list(
 		return
 	prefs.save_preferences()
 
-/client/proc/init_verbs() // compiles a full list of verbs and sends it to the browser
-	var/list/verblist = list()
-	var/list/fullverbs = verbs + mob.verbs
-	for(var/L in fullverbs)
-		if(L:hidden)
-			continue
-		if(!istext(L:category))
-			continue
-		var/cleanname = replacetext(L:name, " ", "-") // gotta scrub spaces for commandbar
-		var/cleancategory = L:category
-		verblist[++verblist.len] = list("[cleancategory]", "[cleanname]")
-
 //pass the verb type path to this instead of adding it directly to verbs so the statpanel can update
-/proc/add_verb(target, verb)
+/proc/add_verb(target, verb, flush = TRUE)
 	if(!target)
 		return
-	var/list/V = list()
+	var/is_list = islist(verb)
+	var/client/client
 	if(istype(target, /client))
-		var/client/C = target
-		if(!islist(verb))
-			C.verbs += verb
-			if(verb:hidden || !verb:category)// no category
-				return
-			V = list("[verb:category]", "[verb:name]")
-			V = url_encode(json_encode(V))
-		else if(islist(verb))
-			for(var/L in verb)
-				if(islist(L)) // list in a list? more likely than you think
-					add_verb(target, L) // just pass it through again til we get the verb
-					continue
-				C.verbs += L
-				if(L:hidden || !L:category)// no category
-					return
-				V[++V.len] = list("[L:category]", "[L:name]")
-				V = url_encode(json_encode(V))
-			C.init_verbs()
-	else if(istype(target, /mob)) // copy pasta for mobs
-		var/mob/M = target
-		if(!islist(verb))
-			M.verbs += verb
-			if(verb:hidden || !verb:category)// no category
-				return
-			V = list("[verb:category]", "[verb:name]")
-			V = url_encode(json_encode(V))
-		else if(islist(verb))
-			for(var/L in verb)
-				if(islist(L)) // list in a list? more likely than you think
-					add_verb(target, L) // just pass it through again til we get the verb
-					continue
-				M.verbs += L
-				if(L:hidden || !L:category)// no category
-					return
-				V[++V.len] = list("[L:category]", "[L:name]")
-				V = url_encode(json_encode(V))
-			M?.client.init_verbs()
-
+		client = target
+		if(!is_list)
+			client.verbs |= verb
+	else if(istype(target, /mob))
+		var/mob/mob = target
+		client = mob.client
+		if(!is_list)
+			mob.verbs |= verb
+	// Deal with each verb in the list individually
+	if(is_list)
+		for(var/_verb in verb)
+			add_verb(target, _verb, flush = FALSE)
+	else
+		client?.tgui_panel?.add_verb(verb)
+	if(flush)
+		client?.tgui_panel?.flush_verbs()
 
 // same as above
-/proc/remove_verb(target, verb)
+/proc/remove_verb(target, verb, flush = TRUE)
 	if(!target)
 		return
-	var/list/V = list()
+	var/is_list = islist(verb)
+	var/client/client
 	if(istype(target, /client))
-		var/client/C = target
-		if(!islist(verb))
-			C.verbs -= verb
-			V = list("[verb:category]", "[verb:name]")
-			V = url_encode(json_encode(V))
-		else if(islist(verb))
-			for(var/L in verb)
-				if(islist(L)) // list in a list? more likely than you think
-					add_verb(target, L) // just pass it through again til we get the verb
-					continue
-				C.verbs -= L
-				V[++V.len] = list("[L:category]", "[L:name]")
-				V = url_encode(json_encode(V))
-	else if(istype(target, /mob)) // copy pasta for mobs
-		var/mob/M = target
-		if(!islist(verb))
-			M.verbs -= verb
-			V = list("[verb:category]", "[verb:name]")
-			V = url_encode(json_encode(V))
-		else if(islist(verb)) // list of verbs
-			for(var/L in verb) // get verb in list
-				if(islist(L)) // list in a list? more likely than you think
-					add_verb(target, L) // just pass it through again til we get the verb
-					continue
-				M.verbs -= L
-				V[++V.len] = list("[L:category]", "[L:name]")
-				V = url_encode(json_encode(V))
+		client = target
+		if(!is_list)
+			client.verbs -= verb
+	else if(istype(target, /mob))
+		var/mob/mob = target
+		client = mob.client
+		if(!is_list)
+			mob.verbs -= verb
+	// Deal with each verb in the list individually
+	if(is_list)
+		for(var/_verb in verb)
+			remove_verb(target, _verb, flush = FALSE)
+	else
+		client?.tgui_panel?.remove_verb(verb)
+	if(flush)
+		client?.tgui_panel?.flush_verbs()
