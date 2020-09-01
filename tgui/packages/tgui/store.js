@@ -35,7 +35,8 @@ export const configureStore = (options = {}) => {
       relayMiddleware);
   }
   const enhancer = applyMiddleware(...middleware);
-  const store = createStore(reducer, enhancer);
+  const store = withBatchedUpdates(
+    createStore(reducer, enhancer));
   // Globals
   window.__store__ = store;
   window.__augmentStack__ = createStackAugmentor(store);
@@ -76,6 +77,42 @@ const createStackAugmentor = store => (stack, error) => {
     window: config?.window,
   });
   return augmentedStack;
+};
+
+/**
+ * Batches multiple store updates into a single update per frame.
+ */
+const withBatchedUpdates = store => {
+  const listeners = [];
+  let scheduled = 0;
+  const notify = () => {
+    for (let i = 0; i < listeners.length; i++) {
+      listeners[i]();
+    }
+  };
+  store.subscribe(() => {
+    scheduled += 1;
+    if (scheduled > 1) {
+      return;
+    }
+    notify();
+    requestAnimationFrame(() => {
+      if (scheduled > 1) {
+        notify();
+      }
+      scheduled = 0;
+    });
+  });
+  return {
+    ...store,
+    subscribe: listener => {
+      listeners.push(listener);
+      return () => {
+        const index = listeners.indexOf(listener);
+        listeners.splice(index, 1);
+      };
+    },
+  };
 };
 
 /**
